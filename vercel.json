@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "npm run build -w packages/web",
+  "devCommand": "npm run dev -w packages/web",
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "packages/web/package.json",
+      "use": "@vercel/next"
+    }
+  ]
+}
