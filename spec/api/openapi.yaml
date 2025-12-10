@@ -1,0 +1,50 @@
+openapi: 3.1.0
+info:
+  title: FutureKind Foresight API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8787
+paths:
+  /v1/generate:
+    post:
+      summary: Generate foresight artifacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../domain/generate-input.schema.json'
+      responses:
+        '202':
+          description: Accepted; run started
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - run_id
+                properties:
+                  run_id:
+                    type: string
+        '400':
+          description: Invalid input
+  /v1/runs/{id}:
+    get:
+      summary: Get generation result
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifacts are ready
+          content:
+            application/json:
+              schema:
+                $ref: '../domain/artifacts.schema.json'
+        '202':
+          description: Still processing
+        '404':
+          description: Not found

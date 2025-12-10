@@ -1,13 +1,44 @@
 {
-  "name": "foresight",
-  "version": "1.0.0",
+  "name": "foresight-mvp",
+  "version": "0.1.0",
   "private": true,
-  "description": "Foresight workspace",
-  "workspaces": ["packages/web"],
+  "packageManager": "pnpm@10.24.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "tests"
+  ],
   "scripts": {
-    "dev": "npm run dev -w packages/web",
-    "build": "npm run build -w packages/web",
-    "start": "npm run start -w packages/web",
-    "lint": "npm run lint -w packages/web"
+    "spec:validate": "ajv validate -s spec/domain/artifacts.schema.json -d tests/fixtures/artifacts.ok.json && redocly lint spec/api/openapi.yaml",
+    "codegen:types": "openapi-typescript spec/api/openapi.yaml -o packages/web/src/lib/api.types.ts",
+    "mock:api": "prism mock spec/api/openapi.yaml",
+    "test:contract": "pact-broker publish spec/contracts/*.json",
+    "test:e2e": "playwright test",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^10.9.0",
+    "@playwright/test": "^1.57.0",
+    "@redocly/cli": "^1.34.5",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/ui": "^1.6.1",
+    "ajv": "^8.17.1",
+    "ajv-cli": "^5.0.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "openapi-typescript": "^6.7.6",
+    "@pact-foundation/pact-cli": "^16.1.5",
+    "playwright": "^1.57.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   }
 }

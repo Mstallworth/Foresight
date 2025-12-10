@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://futurekind.dev/schemas/generate-input.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["question"],
+  "properties": {
+    "question": { "type": "string", "minLength": 10 },
+    "horizon": { "type": "integer", "enum": [6, 24, 60], "default": 24 },
+    "location": { "type": ["string", "null"], "maxLength": 120 },
+    "perspective": { "type": "string", "enum": ["me", "we", "community"], "default": "me" },
+    "seed_bias": { "type": "string", "enum": ["conservative", "exploratory"], "default": "conservative" }
+  }
+}

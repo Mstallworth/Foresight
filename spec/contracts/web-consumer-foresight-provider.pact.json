@@ -1,0 +1,71 @@
+{
+  "consumer": { "name": "web" },
+  "provider": { "name": "foresight-api" },
+  "interactions": [
+    {
+      "description": "POST /v1/generate returns run id",
+      "request": { "method": "POST", "path": "/v1/generate", "body": { "question": "What is the future..." } },
+      "response": { "status": 202, "body": { "run_id": "RUN-123" } }
+    },
+    {
+      "description": "GET /v1/runs/{id} returns artifacts",
+      "request": { "method": "GET", "path": "/v1/runs/RUN-123" },
+      "response": {
+        "status": 200,
+        "body": {
+          "quick_take": {
+            "one_line": "...",
+            "bullets": ["a", "b", "c", "d", "e", "f"],
+            "confidence": "med",
+            "assumptions": ["x", "y"]
+          },
+          "cones": [
+            {
+              "name": "Upside",
+              "vignette": "...",
+              "drivers": ["a", "b", "c"],
+              "uncertainties": ["u1", "u2"],
+              "early_signals": ["s1"]
+            },
+            {
+              "name": "Downside",
+              "vignette": "...",
+              "drivers": ["a", "b", "c"],
+              "uncertainties": ["u1", "u2"],
+              "early_signals": ["s1"]
+            }
+          ],
+          "signals_drivers": {
+            "signals": [
+              { "title": "t", "summary": "s" },
+              { "title": "t2", "summary": "s2" },
+              { "title": "t3", "summary": "s3" },
+              { "title": "t4", "summary": "s4" },
+              { "title": "t5", "summary": "s5" },
+              { "title": "t6", "summary": "s6" }
+            ],
+            "drivers": [
+              { "name": "n", "why": "w" },
+              { "name": "n2", "why": "w2" },
+              { "name": "n3", "why": "w3" },
+              { "name": "n4", "why": "w4" }
+            ]
+          },
+          "timeline": {
+            "milestones": [
+              { "when": "2026", "what": "w", "so_what": "s" },
+              { "when": "2027", "what": "w", "so_what": "s" },
+              { "when": "2028", "what": "w", "so_what": "s" }
+            ],
+            "inflections": []
+          },
+          "moves": {
+            "no_regrets": ["x", "y", "z"],
+            "options": ["o1", "o2"],
+            "watch_outs": ["w"]
+          }
+        }
+      }
+    }
+  ]
+}

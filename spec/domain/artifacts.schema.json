@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://futurekind.dev/schemas/artifacts.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quick_take", "cones", "signals_drivers", "timeline", "moves"],
+  "properties": {
+    "quick_take": {
+      "type": "object",
+      "required": ["one_line", "bullets", "confidence", "assumptions"],
+      "properties": {
+        "one_line": { "type": "string", "minLength": 10 },
+        "bullets": { "type": "array", "minItems": 6, "items": { "type": "string" } },
+        "confidence": { "type": "string", "enum": ["low", "med", "high"] },
+        "assumptions": { "type": "array", "minItems": 2, "items": { "type": "string" } }
+      }
+    },
+    "cones": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["name", "vignette", "drivers", "uncertainties", "early_signals"],
+        "properties": {
+          "name": { "type": "string", "enum": ["Upside", "Downside"] },
+          "vignette": { "type": "string", "minLength": 50 },
+          "drivers": { "type": "array", "minItems": 3, "items": { "type": "string" } },
+          "uncertainties": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "early_signals": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    },
+    "signals_drivers": {
+      "type": "object",
+      "required": ["signals", "drivers"],
+      "properties": {
+        "signals": {
+          "type": "array", "minItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["title", "summary"],
+            "properties": {
+              "title": { "type": "string" },
+              "summary": { "type": "string" },
+              "source_url": { "type": ["string", "null"], "format": "uri", "nullable": true }
+            }
+          }
+        },
+        "drivers": {
+          "type": "array", "minItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["name", "why"],
+            "properties": {
+              "name": { "type": "string" },
+              "why": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["milestones"],
+      "properties": {
+        "milestones": {
+          "type": "array", "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["when", "what", "so_what"],
+            "properties": {
+              "when": { "type": "string" },
+              "what": { "type": "string" },
+              "so_what": { "type": "string" }
+            }
+          }
+        },
+        "inflections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["when", "what"],
+            "properties": { "when": { "type": "string" }, "what": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "moves": {
+      "type": "object",
+      "required": ["no_regrets", "options", "watch_outs"],
+      "properties": {
+        "no_regrets": { "type": "array", "minItems": 3, "items": { "type": "string" } },
+        "options": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "watch_outs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "tags": {
+          "type": "array",
+          "items": { "type": "object", "properties": { "effort": { "enum": ["L", "M", "H"] }, "impact": { "enum": ["L", "M", "H"] } } }
+        }
+      }
+    }
+  }
+}
