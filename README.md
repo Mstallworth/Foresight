@@ -43,3 +43,11 @@ npm run build
 ## Feature flag
 
 Set `NEXT_PUBLIC_USE_CHATKIT=1` to render `ChatKitSurface` adapter.
+
+## Vercel deployment note
+
+If Vercel reports `No Output Directory named "public" found`, do **not** change the project to emit a `public` build folder.
+This repository is a Next.js app, so Vercel should use the **Next.js framework preset** and the default `.next` build output automatically.
+
+This repo includes `vercel.json` with `"framework": "nextjs"` to avoid static-site output directory misconfiguration.
+
