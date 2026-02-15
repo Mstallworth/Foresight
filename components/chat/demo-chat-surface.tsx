@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Artifact, DemoState, Exploration, Mode, PreferableFuture } from '@/lib/types';
 import { Composer } from './composer';
 import { ArtifactCard } from '../cards/artifact-card';
@@ -67,18 +67,108 @@ function Empty() {
 }
 
 function Feed({ artifacts, onSaveFuture, exploration, onSignalAction }: { artifacts: Artifact[]; onSaveFuture: (f: Omit<PreferableFuture, 'id' | 'createdAt'>) => void; exploration: Exploration; onSignalAction: (id: string, action: 'saved' | 'dismissed') => void }) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const artifact of artifacts) {
+        if (artifact.status === 'locked' && !next[artifact.id]) next[artifact.id] = true;
+      }
+      return next;
+    });
+  }, [artifacts]);
+
   return (
-    <div className="mx-auto max-w-3xl space-y-3">
+    <div className="mx-auto max-w-5xl space-y-3">
       {artifacts.map((a) => {
-        if (a.type === 'clarify') return <ArtifactCard key={a.id} title="Step 0 — Clarify Goal"><p>{(a.data as any).summary}</p><ul className="list-disc pl-6">{(a.data as any).bullets.map((b: string) => <li key={b}>{b}</li>)}</ul></ArtifactCard>;
-        if (a.type === 'frame') return <ArtifactCard key={a.id} title="Step 1 — Frame">Time horizon: {(a.data as any).timeHorizon}<div className="mt-2 text-xs">60-second guided timer active in demo behavior.</div></ArtifactCard>;
-        if (a.type === 'stakeholders') return <ArtifactCard key={a.id} title="Step 2 — Stakeholders">{JSON.stringify(a.data)}</ArtifactCard>;
-        if (a.type === 'personas') return <ArtifactCard key={a.id} title="Step 3 — Personas" collapsible>{(a.data as any[]).map((p) => <div key={p.name} className="mb-2"><strong>{p.name}</strong> — {p.role}<p>{p.quote}</p></div>)}</ArtifactCard>;
-        if (a.type === 'collection_plan') return <ArtifactCard key={a.id} title="Step 4 — Collection plan">{(a.data as any).criteria}</ArtifactCard>;
-        if (a.type === 'signals') return <ArtifactCard key={a.id} title="Step 5 — Signals">{((a.data as any).items || []).map((s: any) => <div key={s.id} className="mb-2 rounded-xl border p-2"><div className="font-medium">{s.title}</div><div className="text-xs">{s.source} · {s.date}</div><div className="flex gap-2 mt-1"><button onClick={() => onSignalAction(s.id, 'saved')} className="rounded-full border px-2 text-xs">Save</button><button onClick={() => onSignalAction(s.id, 'dismissed')} className="rounded-full border px-2 text-xs">Dismiss</button></div></div>)}</ArtifactCard>;
-        if (a.type === 'horizon_scan') return <ArtifactCard key={a.id} title="Step 6 — Horizon Scan">{(a.data as any).present}</ArtifactCard>;
-        if (a.type === 'scenarios') return <ArtifactCard key={a.id} title="Step 7 — Scenarios">{(a.data as any[]).map((s) => <div key={s.id} className="mb-2 rounded-xl border p-2"><div className="font-semibold">{s.title}</div><p>{s.logline}</p><button onClick={() => onSaveFuture({ explorationId: exploration.id, scenarioId: s.id, title: s.title, brief: s.logline, tags: ['scenario'] })} className="mt-1 rounded-full border px-2 text-xs">Save as preferable future</button></div>)}</ArtifactCard>;
-        if (a.type === 'simulation') return <ArtifactCard key={a.id} title="Step 8 — Simulation Results">{(a.data as any).distribution}<details className="mt-2"><summary>Model assumptions (mock)</summary>{(a.data as any).assumptions.join(', ')}</details></ArtifactCard>;
+        const isOpen = !collapsed[a.id];
+        if (a.type === 'clarify') return <ArtifactCard key={a.id} title="Step 0 — Clarify Goal" collapsible open={isOpen}><p>{(a.data as any).summary}</p><ul className="list-disc pl-6">{(a.data as any).bullets.map((b: string) => <li key={b}>{b}</li>)}</ul></ArtifactCard>;
+        if (a.type === 'frame') return <ArtifactCard key={a.id} title="Step 1 — Frame" collapsible open={isOpen}>Time horizon: {(a.data as any).timeHorizon}<div className="mt-2 text-xs">60-second guided timer active in demo behavior.</div></ArtifactCard>;
+        if (a.type === 'stakeholders') return <ArtifactCard key={a.id} title="Step 2 — Stakeholders" collapsible open={isOpen}>
+          <div className="grid gap-3 md:grid-cols-2">
+            {Object.entries(a.data as any).map(([bucket, stakeholders]: any) => (
+              <section key={bucket} className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">{bucket}</h4>
+                <div className="space-y-2">
+                  {stakeholders.map((s: any) => (
+                    <div key={s.name} className="rounded-lg border border-zinc-200 bg-white p-2">
+                      <div className="font-medium text-zinc-900">{s.name}</div>
+                      <div className="mt-1 flex gap-2 text-xs">
+                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">Influence: {s.influence}</span>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">Interest: {s.interest}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </ArtifactCard>;
+        if (a.type === 'personas') return <ArtifactCard key={a.id} title="Step 3 — Personas" collapsible open={isOpen}>
+          <div className="grid gap-3 md:grid-cols-2">
+            {(a.data as any[]).map((p) => <article key={p.name} className="rounded-xl border border-zinc-200 p-3">
+              <div className="text-sm font-semibold text-zinc-900">{p.name}</div>
+              <div className="text-xs text-zinc-500">{p.role}</div>
+              <p className="mt-2 text-xs"><span className="font-medium">Profile:</span> {p.profile}</p>
+              <p className="mt-1 text-xs"><span className="font-medium">Goal:</span> {p.goals}</p>
+              <p className="mt-1 text-xs"><span className="font-medium">Fear:</span> {p.fears}</p>
+              <p className="mt-1 text-xs"><span className="font-medium">Leverage:</span> {p.leverage}</p>
+              <p className="mt-1 text-xs"><span className="font-medium">Channels:</span> {p.preferredChannels}</p>
+              <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-xs italic">“{p.quote}”</p>
+            </article>)}
+          </div>
+        </ArtifactCard>;
+        if (a.type === 'collection_plan') return <ArtifactCard key={a.id} title="Step 4 — Collection plan" collapsible open={isOpen}>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold text-zinc-900">Collection objectives</h4>
+              <ul className="mt-1 list-disc pl-5 text-xs">{(a.data as any).objectives.map((o: string) => <li key={o}>{o}</li>)}</ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Supporting data objects</h4>
+              <div className="mt-2 grid gap-2 md:grid-cols-3">{(a.data as any).dataObjects.map((obj: any) => <div key={obj.name} className="rounded-xl border border-zinc-200 p-2 text-xs"><div className="font-medium">{obj.name}</div><p className="mt-1 text-zinc-600">{obj.purpose}</p><div className="mt-2 flex flex-wrap gap-1">{obj.fields.map((field: string) => <span key={field} className="rounded-full bg-zinc-100 px-2 py-0.5">{field}</span>)}</div></div>)}</div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Experience flow</h4>
+              <div className="mt-2 grid gap-2 md:grid-cols-4">{(a.data as any).workflow.map((step: any) => <div key={step.stage} className="rounded-xl bg-zinc-50 p-2 text-xs"><div className="font-medium">{step.stage}</div><p className="mt-1">{step.description}</p></div>)}</div>
+            </div>
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs">Quality bar: {(a.data as any).qualityBar}</p>
+          </div>
+        </ArtifactCard>;
+        if (a.type === 'signals') return <ArtifactCard key={a.id} title="Step 5 — Signals" collapsible open={isOpen}>
+          <div className="space-y-2">{((a.data as any).items || []).map((s: any) => <div key={s.id} className="rounded-lg border border-zinc-200 p-2"><div className="flex items-start justify-between gap-2"><div><div className="font-medium leading-tight text-zinc-900">{s.title}</div><div className="text-[11px] text-zinc-500">{s.source} · {s.date}</div></div><div className="flex gap-1"><button onClick={() => onSignalAction(s.id, 'saved')} className="rounded-full border px-2 py-0.5 text-[11px]">Save</button><button onClick={() => onSignalAction(s.id, 'dismissed')} className="rounded-full border px-2 py-0.5 text-[11px]">Dismiss</button></div></div><div className="mt-1 flex flex-wrap gap-1">{s.tags.map((tag: string) => <span key={tag} className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px]">{tag}</span>)}</div></div>)}</div>
+        </ArtifactCard>;
+        if (a.type === 'horizon_scan') return <ArtifactCard key={a.id} title="Step 6 — Horizon Scan" collapsible open={isOpen}>
+          <div className="space-y-4">
+            <div className="grid gap-2 md:grid-cols-3">{(a.data as any).lenses.map((lens: any) => <article key={lens.horizon} className="rounded-xl border border-zinc-200 p-3"><div className="text-xs font-semibold text-zinc-500">{lens.horizon}</div><h4 className="text-sm font-semibold text-zinc-900">{lens.headline}</h4><p className="mt-1 text-xs">{lens.summary}</p><div className="mt-2 space-y-1">{lens.metrics.map((m: any) => <div key={m.name} className="flex justify-between rounded bg-zinc-50 px-2 py-1 text-[11px]"><span>{m.name}</span><span>{m.value}</span></div>)}</div></article>)}</div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Driving forces</h4>
+              <div className="mt-1 flex flex-wrap gap-1">{(a.data as any).drivingForces.map((f: string) => <span key={f} className="rounded-full border px-2 py-0.5 text-xs">{f}</span>)}</div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Strategic implications</h4>
+              <ul className="mt-1 list-disc pl-5 text-xs">{(a.data as any).implications.map((i: string) => <li key={i}>{i}</li>)}</ul>
+            </div>
+          </div>
+        </ArtifactCard>;
+        if (a.type === 'scenarios') return <ArtifactCard key={a.id} title="Step 7 — Scenarios" collapsible open={isOpen}>
+          <div className="grid gap-3 md:grid-cols-3">{(a.data as any[]).map((s) => <div key={s.id} className="overflow-hidden rounded-xl border border-zinc-200"><img src={s.image} alt={s.title} className="h-28 w-full object-cover" /><div className="p-3"><div className="font-semibold text-zinc-900">{s.title}</div><p className="mt-1 text-xs">{s.logline}</p><button onClick={() => onSaveFuture({ explorationId: exploration.id, scenarioId: s.id, title: s.title, brief: s.logline, tags: ['scenario'] })} className="mt-2 rounded-full border px-2 py-0.5 text-xs">Save as preferable future</button></div></div>)}</div>
+        </ArtifactCard>;
+        if (a.type === 'simulation') return <ArtifactCard key={a.id} title="Step 8 — Simulation Results" collapsible open={isOpen}>
+          <div className="space-y-3">
+            <div className="rounded-lg bg-zinc-50 p-2 text-xs">{(a.data as any).distribution}</div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Recommended actions</h4>
+              <div className="mt-2 space-y-2">{(a.data as any).decisionSummary.map((d: any) => <div key={d.action} className="rounded-lg border border-zinc-200 p-2 text-xs"><div className="font-medium">{d.action}</div><div className="mt-1 flex flex-wrap gap-1"><span className="rounded-full bg-green-50 px-2 py-0.5 text-green-700">Impact: {d.expectedImpact}</span><span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">Confidence: {d.confidence}</span><span className="rounded-full bg-purple-50 px-2 py-0.5 text-purple-700">Lead time: {d.leadTime}</span></div></div>)}</div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-zinc-900">Scenario score comparison</h4>
+              <div className="mt-2 space-y-1">{(a.data as any).scenarioPerformance.map((s: any) => <div key={s.scenario} className="grid grid-cols-4 gap-1 rounded bg-zinc-50 px-2 py-1 text-[11px]"><span className="font-medium">{s.scenario}</span><span>Res {s.resilience}</span><span>Growth {s.growth}</span><span>Equity {s.equity}</span></div>)}</div>
+            </div>
+            <details className="text-xs"><summary>Model assumptions (mock)</summary>{(a.data as any).assumptions.join(', ')}</details>
+          </div>
+        </ArtifactCard>;
         return null;
       })}
     </div>
